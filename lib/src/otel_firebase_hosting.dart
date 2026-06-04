@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_firebase_hosting_suppression.dart';
 
@@ -50,45 +49,61 @@ Future<T> tracedFirebaseHosting<T>({
   final t = tracer ?? OTel.tracerProvider().getTracer('otel_firebase_hosting');
   final span = t.startSpan('fbhosting $operation', kind: SpanKind.client);
   try {
-    span.setStringAttribute('rpc.system', 'firebase');
+    span.addAttributes(
+        OTel.attributes([OTel.attributeString('rpc.system', 'firebase')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.projectId != null) {
-        span.setStringAttribute('gcp.project.id', res.projectId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('gcp.project.id', res.projectId!)]));
       }
       if (res.siteId != null) {
-        span.setStringAttribute('firebase.hosting.site.id', res.siteId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('firebase.hosting.site.id', res.siteId!)]));
       }
       if (res.versionId != null) {
-        span.setStringAttribute('firebase.hosting.version.id', res.versionId!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('firebase.hosting.version.id', res.versionId!)
+        ]));
       }
       if (res.releaseId != null) {
-        span.setStringAttribute('firebase.hosting.release.id', res.releaseId!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('firebase.hosting.release.id', res.releaseId!)
+        ]));
       }
       if (res.channelId != null) {
-        span.setStringAttribute('firebase.hosting.channel.id', res.channelId!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('firebase.hosting.channel.id', res.channelId!)
+        ]));
       }
       if (res.fileCount != null) {
-        span.setIntAttribute('firebase.hosting.file_count', res.fileCount!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeInt('firebase.hosting.file_count', res.fileCount!)
+        ]));
       }
       if (res.totalBytes != null) {
-        span.setIntAttribute('firebase.hosting.total_bytes', res.totalBytes!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeInt('firebase.hosting.total_bytes', res.totalBytes!)
+        ]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('fbhosting.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('fbhosting.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'fbhosting.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'fbhosting.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
